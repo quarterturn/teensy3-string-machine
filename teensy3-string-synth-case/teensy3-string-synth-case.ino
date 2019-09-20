@@ -66,10 +66,6 @@ AudioEffectEnvelope envelope15;
 AudioEffectEnvelope envelope16;
 AudioEffectEnsemble ensemble1;
 
-
-// array of envelopes
-AudioEffectEnvelope *myEnvelope[16] = { &envelope1, &envelope2, &envelope3, &envelope4, &envelope5, &envelope6, &envelope7, &envelope8, &envelope9, &envelope10, &envelope11, &envelope12, &envelope13, &envelope14, &envelope15, &envelope16 };
-
 AudioSynthWaveform waveform1;
 AudioSynthWaveform waveform2;
 AudioSynthWaveform waveform3;
@@ -86,9 +82,6 @@ AudioSynthWaveform waveform13;
 AudioSynthWaveform waveform14;
 AudioSynthWaveform waveform15;
 AudioSynthWaveform waveform16;
-
-// array of waveforms
-AudioSynthWaveform *myWaveform[16] = { &waveform1, &waveform2, &waveform3, &waveform4, &waveform5, &waveform6, &waveform7, &waveform8, &waveform9, &waveform10, &waveform11, &waveform12, &waveform13, &waveform14, &waveform15, &waveform16};
 
 AudioConnection          patchCord1(waveform1, envelope1);
 AudioConnection          patchCord2(waveform2, envelope2);
@@ -135,7 +128,7 @@ AudioConnection          patchCord34(mixer_group_2, 0, mixer_all_voices, 1);
 AudioConnection          patchCord35(mixer_group_3, 0, mixer_all_voices, 2);
 AudioConnection          patchCord36(mixer_group_4, 0, mixer_all_voices, 3);
 AudioConnection          patchCord37(mixer_all_voices, 0, filter1, 0);
-AudioConnection          patchCord38(mixer_all_voices, 0, filter1, 1);
+//AudioConnection          patchCord38(mixer_all_voices, 0, filter1, 1);
 AudioConnection          patchCord39(filter1, 0, ensemble1, 0);
 AudioConnection          patchCord40(ensemble1, 0, i2sOut0, 0);
 AudioConnection          patchCord41(ensemble1, 1, i2sOut1, 1);
@@ -203,9 +196,15 @@ void setup() {
   delay(500);
   Serial.println("HELLOOOOO?!?");
 
+    // Disable the audio codec first
+  codecControl.disable();
+  delay(100);
+  codecControl.enable();
+  AudioMemory(128);
+  wm8731_1.enable();
+
   // stop processing while configuring things
   AudioNoInterrupts();
-  AudioMemory(128);
 
   // initialize the notes struct
   // NOTE: MIDI pitch 0 signifies no note is playing
@@ -217,26 +216,123 @@ void setup() {
     notes[j].mySequence = 0;
   }
 
-  // initialize envelopes
-  for (int h = 0; h < VOICES; h++)
-  {
-    myEnvelope[h]->attack(vcaAttack);
-    myEnvelope[h]->hold(0.0);
-    myEnvelope[h]->decay(vcaDecay);
-    myEnvelope[h]->sustain(vcaSustain);
-    myEnvelope[h]->release(vcaRelease);
-  }
+  mixer_group_1.gain(0, 0.0625);
+  mixer_group_1.gain(1, 0.0625);
+  mixer_group_1.gain(2, 0.0625);
+  mixer_group_1.gain(3, 0.0625);
+  mixer_group_2.gain(0, 0.0625);
+  mixer_group_2.gain(1, 0.0625);
+  mixer_group_2.gain(2, 0.0625);
+  mixer_group_2.gain(3, 0.0625);
+  mixer_group_3.gain(0, 0.0625);
+  mixer_group_3.gain(1, 0.0625);
+  mixer_group_3.gain(2, 0.0625);
+  mixer_group_3.gain(3, 0.0625);
+  mixer_group_4.gain(0, 0.0625);
+  mixer_group_4.gain(1, 0.0625);
+  mixer_group_4.gain(2, 0.0625);
+  mixer_group_4.gain(3, 0.0625);
 
+  envelope1.attack(vcaAttack);
+  envelope1.hold(0.0);
+  envelope1.decay(vcaDecay);
+  envelope1.sustain(vcaSustain);
+  envelope1.release(vcaRelease);
+
+  envelope2.attack(vcaAttack);
+  envelope2.hold(0.0);
+  envelope2.decay(vcaDecay);
+  envelope2.sustain(vcaSustain);
+  envelope2.release(vcaRelease);
+
+  envelope3.attack(vcaAttack);
+  envelope3.hold(0.0);
+  envelope3.decay(vcaDecay);
+  envelope3.sustain(vcaSustain);
+  envelope3.release(vcaRelease);
+
+  envelope4.attack(vcaAttack);
+  envelope4.hold(0.0);
+  envelope4.decay(vcaDecay);
+  envelope4.sustain(vcaSustain);
+  envelope4.release(vcaRelease);
+
+  envelope5.attack(vcaAttack);
+  envelope5.hold(0.0);
+  envelope5.decay(vcaDecay);
+  envelope5.sustain(vcaSustain);
+  envelope5.release(vcaRelease);
+
+  envelope6.attack(vcaAttack);
+  envelope6.hold(0.0);
+  envelope6.decay(vcaDecay);
+  envelope6.sustain(vcaSustain);
+  envelope6.release(vcaRelease);
+
+  envelope7.attack(vcaAttack);
+  envelope7.hold(0.0);
+  envelope7.decay(vcaDecay);
+  envelope7.sustain(vcaSustain);
+  envelope7.release(vcaRelease);
+
+  envelope8.attack(vcaAttack);
+  envelope8.hold(0.0);
+  envelope8.decay(vcaDecay);
+  envelope8.sustain(vcaSustain);
+  envelope8.release(vcaRelease);
+
+  envelope9.attack(vcaAttack);
+  envelope9.hold(0.0);
+  envelope9.decay(vcaDecay);
+  envelope9.sustain(vcaSustain);
+  envelope9.release(vcaRelease);
+
+  envelope10.attack(vcaAttack);
+  envelope10.hold(0.0);
+  envelope10.decay(vcaDecay);
+  envelope10.sustain(vcaSustain);
+  envelope10.release(vcaRelease);
+
+  envelope11.attack(vcaAttack);
+  envelope11.hold(0.0);
+  envelope11.decay(vcaDecay);
+  envelope11.sustain(vcaSustain);
+  envelope11.release(vcaRelease);
+
+  envelope12.attack(vcaAttack);
+  envelope12.hold(0.0);
+  envelope12.decay(vcaDecay);
+  envelope12.sustain(vcaSustain);
+  envelope12.release(vcaRelease);
+
+  envelope13.attack(vcaAttack);
+  envelope13.hold(0.0);
+  envelope13.decay(vcaDecay);
+  envelope13.sustain(vcaSustain);
+  envelope13.release(vcaRelease);
+
+  envelope14.attack(vcaAttack);
+  envelope14.hold(0.0);
+  envelope14.decay(vcaDecay);
+  envelope14.sustain(vcaSustain);
+  envelope14.release(vcaRelease);
+
+  envelope15.attack(vcaAttack);
+  envelope15.hold(0.0);
+  envelope15.decay(vcaDecay);
+  envelope15.sustain(vcaSustain);
+  envelope15.release(vcaRelease);
+
+  envelope16.attack(vcaAttack);
+  envelope16.hold(0.0);
+  envelope16.decay(vcaDecay);
+  envelope16.sustain(vcaSustain);
+  envelope16.release(vcaRelease);
+  
   // initialize filters
   filter1.frequency(vcfCutoff);
   filter1.resonance(vcfResonance);
   filter1.octaveControl(7); // default to the maximum range
-
-  // Disable the audio codec first
-  codecControl.disable();
-  delay(100);
-  delay(100);
-  codecControl.enable();
 
   // resume processing
   AudioInterrupts();
@@ -330,7 +426,59 @@ void loop()
     vcaAttack = (potValue / 1023.0) * MAX_EG_TIME;
     for (int g = 0; g < VOICES; g++)
     {
-      myEnvelope[g]->attack(vcaAttack);
+      switch (g)
+      {
+        case 0:
+          envelope1.attack(vcaAttack);
+          break;
+        case 1:
+          envelope2.attack(vcaAttack);
+          break;
+        case 2:
+          envelope3.attack(vcaAttack);
+          break;
+        case 3:
+          envelope4.attack(vcaAttack);
+          break;
+        case 4:
+          envelope5.attack(vcaAttack);
+          break;
+        case 5:
+          envelope6.attack(vcaAttack);
+          break;
+        case 6:
+          envelope7.attack(vcaAttack);
+          break;
+        case 7:
+          envelope8.attack(vcaAttack);
+          break;
+        case 8:
+          envelope9.attack(vcaAttack);
+          break;
+        case 9:
+          envelope10.attack(vcaAttack);
+          break;
+        case 10:
+          envelope11.attack(vcaAttack);
+          break;
+        case 11:
+          envelope12.attack(vcaAttack);
+          break;
+        case 12:
+          envelope13.attack(vcaAttack);
+          break;
+        case 13:
+          envelope14.attack(vcaAttack);
+          break;
+        case 14:
+          envelope15.attack(vcaAttack);
+          break;
+        case 15:
+          envelope16.attack(vcaAttack);
+          break;
+        default:
+          break;
+      };
     }
   }
   // release
@@ -339,7 +487,59 @@ void loop()
     vcaRelease = (potValue / 1023.0) * MAX_EG_TIME;
     for (int f = 0; f < VOICES; f++)
     {
-      myEnvelope[f]->attack(vcaRelease);
+      switch (f)
+      {
+        case 0:
+          envelope1.release(vcaAttack);
+          break;
+        case 1:
+          envelope2.release(vcaAttack);
+          break;
+        case 2:
+          envelope3.release(vcaAttack);
+          break;
+        case 3:
+          envelope4.release(vcaAttack);
+          break;
+        case 4:
+          envelope5.release(vcaAttack);
+          break;
+        case 5:
+          envelope6.release(vcaAttack);
+          break;
+        case 6:
+          envelope7.release(vcaAttack);
+          break;
+        case 7:
+          envelope8.release(vcaAttack);
+          break;
+        case 8:
+          envelope9.release(vcaAttack);
+          break;
+        case 9:
+          envelope10.release(vcaAttack);
+          break;
+        case 10:
+          envelope11.release(vcaAttack);
+          break;
+        case 11:
+          envelope12.release(vcaAttack);
+          break;
+        case 12:
+          envelope13.release(vcaAttack);
+          break;
+        case 13:
+          envelope14.release(vcaAttack);
+          break;
+        case 14:
+          envelope15.release(vcaAttack);
+          break;
+        case 15:
+          envelope16.release(vcaAttack);
+          break;
+        default:
+          break;
+      };
     }
   }
   // cutoff or pwm
@@ -351,7 +551,59 @@ void loop()
       for (int e = 0; e < VOICES; e++)
       {
         AudioNoInterrupts();
-        myWaveform[e]->pulseWidth(pwmLevel);
+        switch (e)
+        {
+          case 0:
+            waveform1.pulseWidth(pwmLevel);
+            break;
+          case 1:
+            waveform2.pulseWidth(pwmLevel);
+            break;
+          case 2:
+            waveform3.pulseWidth(pwmLevel);
+            break;
+          case 3:
+            waveform4.pulseWidth(pwmLevel);
+            break;
+          case 4:
+            waveform5.pulseWidth(pwmLevel);
+            break;
+          case 5:
+            waveform6.pulseWidth(pwmLevel);
+            break;
+          case 6:
+            waveform7.pulseWidth(pwmLevel);
+            break;
+          case 7:
+            waveform8.pulseWidth(pwmLevel);
+            break;
+          case 8:
+            waveform9.pulseWidth(pwmLevel);
+            break;
+          case 9:
+            waveform10.pulseWidth(pwmLevel);
+            break;
+          case 10:
+            waveform11.pulseWidth(pwmLevel);
+            break;
+          case 11:
+            waveform12.pulseWidth(pwmLevel);
+            break;
+          case 12:
+            waveform13.pulseWidth(pwmLevel);
+            break;
+          case 13:
+            waveform14.pulseWidth(pwmLevel);
+            break;
+          case 14:
+            waveform15.pulseWidth(pwmLevel);
+            break;
+          case 15:
+            waveform16.pulseWidth(pwmLevel);
+            break;
+          default:
+            break;
+        };
         AudioInterrupts();
       }
     }
@@ -431,7 +683,59 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
     AudioNoInterrupts();
 
     // turn off the voice being stolen
-    myEnvelope[voiceUsed]->noteOff();
+    switch (voiceUsed)
+    {
+      case 0:
+        envelope1.noteOff();
+        break;
+      case 1:
+        envelope2.noteOff();
+        break;
+      case 2:
+        envelope3.noteOff();
+        break;
+      case 3:
+        envelope4.noteOff();
+        break;
+      case 4:
+        envelope5.noteOff();
+        break;
+      case 5:
+        envelope6.noteOff();
+        break;
+      case 6:
+        envelope7.noteOff();
+        break;
+      case 7:
+        envelope8.noteOff();
+        break;
+      case 8:
+        envelope9.noteOff();
+        break;
+      case 9:
+        envelope10.noteOff();
+        break;
+      case 10:
+        envelope11.noteOff();
+        break;
+      case 11:
+        envelope12.noteOff();
+        break;
+      case 12:
+        envelope13.noteOff();
+        break;
+      case 13:
+        envelope14.noteOff();
+        break;
+      case 14:
+        envelope15.noteOff();
+        break;
+      case 15:
+        envelope16.noteOff();
+        break;
+      default:
+        break;
+    };
 
     AudioInterrupts();
   }  
@@ -454,9 +758,92 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
   }
 
   AudioNoInterrupts();
-  myWaveform[voiceUsed]->begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
-  myWaveform[voiceUsed]->pulseWidth(pwmLevel);
-  myEnvelope[voiceUsed]->noteOn();
+  switch (voiceUsed)
+  {
+    case 0:
+      waveform1.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform1.pulseWidth(pwmLevel);
+      envelope1.noteOn();
+      break;
+    case 1:
+      waveform2.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform2.pulseWidth(pwmLevel);
+      envelope2.noteOn();
+      break;
+    case 2:
+      waveform3.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform3.pulseWidth(pwmLevel);
+      envelope3.noteOn();
+      break;
+    case 3:
+      waveform4.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform4.pulseWidth(pwmLevel);
+      envelope4.noteOn();
+      break;
+    case 4:
+      waveform5.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform5.pulseWidth(pwmLevel);
+      envelope5.noteOn();
+      break;
+    case 5:
+      waveform6.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform6.pulseWidth(pwmLevel);
+      envelope6.noteOn();
+      break;
+    case 6:
+      waveform7.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform7.pulseWidth(pwmLevel);
+      envelope7.noteOn();
+      break;
+    case 7:
+      waveform8.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform8.pulseWidth(pwmLevel);
+      envelope8.noteOn();
+      break;
+    case 8:
+      waveform9.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform9.pulseWidth(pwmLevel);
+      envelope9.noteOn();
+      break;
+    case 9:
+      waveform10.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform10.pulseWidth(pwmLevel);
+      envelope10.noteOn();
+      break;
+    case 10:
+      waveform11.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform11.pulseWidth(pwmLevel);
+      envelope11.noteOn();
+      break;
+    case 11:
+      waveform12.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform12.pulseWidth(pwmLevel);
+      envelope12.noteOn();
+      break;
+    case 12:
+      waveform13.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform13.pulseWidth(pwmLevel);
+      envelope13.noteOn();
+      break;
+    case 13:
+      waveform14.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform14.pulseWidth(pwmLevel);
+      envelope14.noteOn();
+      break;
+    case 14:
+      waveform15.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform15.pulseWidth(pwmLevel);
+      envelope15.noteOn();
+      break;
+    case 15:
+      waveform16.begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
+      waveform16.pulseWidth(pwmLevel);
+      envelope16.noteOn();
+      break;
+    default:
+      break;
+  };
+  
   AudioInterrupts();
 
   
@@ -490,7 +877,59 @@ void doNoteOff(byte channel, byte pitch, byte velocity)
   Serial.println(voiceUsed);
 
   AudioNoInterrupts();
-  myEnvelope[voiceUsed]->noteOff();
+    switch (voiceUsed)
+  {
+    case 0:
+      envelope1.noteOff();
+      break;
+    case 1:
+      envelope2.noteOff();
+      break;
+    case 2:
+      envelope3.noteOff();
+      break;
+    case 3:
+      envelope4.noteOff();
+      break;
+    case 4:
+      envelope5.noteOff();
+      break;
+    case 5:
+      envelope6.noteOff();
+      break;
+    case 6:
+      envelope7.noteOff();
+      break;
+    case 7:
+      envelope8.noteOff();
+      break;
+    case 8:
+      envelope9.noteOff();
+      break;
+    case 9:
+      envelope10.noteOff();
+      break;
+    case 10:
+      envelope11.noteOff();
+      break;
+    case 11:
+      envelope12.noteOff();
+      break;
+    case 12:
+      envelope13.noteOff();
+      break;
+    case 13:
+      envelope14.noteOff();
+      break;
+    case 14:
+      envelope15.noteOff();
+      break;
+    case 15:
+      envelope16.noteOff();
+      break;
+    default:
+      break;
+  };
   AudioInterrupts();
 }
 
@@ -532,7 +971,91 @@ void doBend(byte channel, int bend)
       {
         oscFreq = oscFreq + ((oscFreq / 2) * pitchBend);
       }
-      myWaveform[k]->begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+      switch (k)
+      {
+        case 0:
+          waveform1.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform1.pulseWidth(pwmLevel);
+          envelope1.noteOn();
+          break;
+        case 1:
+          waveform2.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform2.pulseWidth(pwmLevel);
+          envelope2.noteOn();
+          break;
+        case 2:
+          waveform3.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform3.pulseWidth(pwmLevel);
+          envelope3.noteOn();
+          break;
+        case 3:
+          waveform4.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform4.pulseWidth(pwmLevel);
+          envelope4.noteOn();
+          break;
+        case 4:
+          waveform5.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform5.pulseWidth(pwmLevel);
+          envelope5.noteOn();
+          break;
+        case 5:
+          waveform6.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform6.pulseWidth(pwmLevel);
+          envelope6.noteOn();
+          break;
+        case 6:
+          waveform7.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform7.pulseWidth(pwmLevel);
+          envelope7.noteOn();
+          break;
+        case 7:
+          waveform8.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform8.pulseWidth(pwmLevel);
+          envelope8.noteOn();
+          break;
+        case 8:
+          waveform9.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform9.pulseWidth(pwmLevel);
+          envelope9.noteOn();
+          break;
+        case 9:
+          waveform10.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform10.pulseWidth(pwmLevel);
+          envelope10.noteOn();
+          break;
+        case 10:
+          waveform11.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform11.pulseWidth(pwmLevel);
+          envelope11.noteOn();
+          break;
+        case 11:
+          waveform12.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform12.pulseWidth(pwmLevel);
+          envelope12.noteOn();
+          break;
+        case 12:
+          waveform13.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform13.pulseWidth(pwmLevel);
+          envelope13.noteOn();
+          break;
+        case 13:
+          waveform14.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform14.pulseWidth(pwmLevel);
+          envelope14.noteOn();
+          break;
+        case 14:
+          waveform15.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform15.pulseWidth(pwmLevel);
+          envelope15.noteOn();
+          break;
+        case 15:
+          waveform16.begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+          waveform16.pulseWidth(pwmLevel);
+          envelope16.noteOn();
+          break;
+        default:
+          break;
+      };
     }
   }
   AudioInterrupts();
