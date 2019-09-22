@@ -1,4 +1,6 @@
+// PJRC audio library
 #include <Audio.h>
+
 // blackaddr audio adapter library
 #define TGA_PRO_REVB // Specify our hardware revision
 #define TGA_PRO_EXPAND_REV2 // Specify we are using the EXPANSION CONTROL BOARD REV2
@@ -7,7 +9,7 @@ using namespace BALibrary;
 
 BAAudioControlWM8731      codecControl;
 
-AudioOutputI2S           i2sOut0, i2sOut1;
+AudioOutputI2S           i2sOut0;
 
 #include <MIDI.h>
 #include <EEPROM.h>
@@ -113,6 +115,7 @@ AudioMixer4              mixer_group_3;
 AudioMixer4              mixer_group_4;
 AudioMixer4              mixer_all_voices;
 AudioFilterStateVariable filter1;
+AudioAmplifier           amp1;
 
 AudioConnection          patchCord17(envelope1, 0, mixer_group_1, 0);
 AudioConnection          patchCord18(envelope2, 0, mixer_group_1, 1);
@@ -136,9 +139,10 @@ AudioConnection          patchCord35(mixer_group_3, 0, mixer_all_voices, 2);
 AudioConnection          patchCord36(mixer_group_4, 0, mixer_all_voices, 3);
 AudioConnection          patchCord37(mixer_all_voices, 0, filter1, 0);
 AudioConnection          patchCord38(mixer_all_voices, 0, filter1, 1);
-AudioConnection          patchCord39(filter1, 0, ensemble1, 0);
+AudioConnection          patchCord39(filter1, 0, amp1, 0);
+AudioConnection          patchCord42(amp1, 0, ensemble1, 0);
 AudioConnection          patchCord40(ensemble1, 0, i2sOut0, 0);
-AudioConnection          patchCord41(ensemble1, 1, i2sOut1, 1);
+AudioConnection          patchCord41(ensemble1, 1, i2sOut0, 1);
 AudioControlWM8731       wm8731_1;       //xy=1428,56
 
 // pitch bend
@@ -162,7 +166,7 @@ float vcfResonance = 0.1; // default to zero resonance
 // #define WAVEFORM_PULSE     5
 
 // oscillator waveform (see above)
-int oscWF = 5;
+int oscWF = 1;
 // oscillator frequency
 float oscFreq = 0.0;
 // oscillator level
@@ -183,13 +187,15 @@ float pwmLevel = 0.5;
 //////////////////////////////////////////
 constexpr int  potCalibMin = 1;
 constexpr int  potCalibMax = 1023;
-constexpr bool potSwapDirection = false;
+constexpr bool potSwapDirection = true;
 
 // track if knob 3 (center) controls pwm
 int isPwm = 0;
+// track led2
+int isLed2 = 0;
 
 // Create physical controls for Expansion Board, 2 switches, 3 pots, 0 encoders, 2 LEDs
-BAPhysicalControls controls(BA_EXPAND_NUM_SW, BA_EXPAND_NUM_POT, 0, BA_EXPAND_NUM_LED);
+BAPhysicalControls controls(BA_EXPAND_NUM_SW, BA_EXPAND_NUM_POT, BA_EXPAND_NUM_ENC, BA_EXPAND_NUM_LED);
 
 int pwmHandle, waveformHandle, attackHandle, releaseHandle, filterHandle, led1Handle, led2Handle;
 
@@ -199,13 +205,19 @@ float potValue;
 // setup
 //---------------------------------------------------------------------------------------------//
 void setup() {
-  Serial.begin(115200);
-  delay(500);
-  Serial.println("HELLOOOOO?!?");
+  //Serial.begin(115200);
 
-  // stop processing while configuring things
-  AudioNoInterrupts();
+  // set up the LED pin
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  wm8731_1.enable();
   AudioMemory(128);
+  // disable and enable the codec
+  codecControl.disable();
+  delay(100);
+  codecControl.enable();
+  codecControl.setHeadphoneVolume(1.0);
 
   // initialize the notes struct
   // NOTE: MIDI pitch 0 signifies no note is playing
@@ -216,6 +228,31 @@ void setup() {
     notes[j].myVelocity = 0;
     notes[j].mySequence = 0;
   }
+
+  mixer_group_1.gain(0, 0.0625);
+  mixer_group_1.gain(1, 0.0625);
+  mixer_group_1.gain(2, 0.0625);
+  mixer_group_1.gain(3, 0.0625);
+  mixer_group_2.gain(0, 0.0625);
+  mixer_group_2.gain(1, 0.0625);
+  mixer_group_2.gain(2, 0.0625);
+  mixer_group_2.gain(3, 0.0625);
+  mixer_group_3.gain(0, 0.0625);
+  mixer_group_3.gain(1, 0.0625);
+  mixer_group_3.gain(2, 0.0625);
+  mixer_group_3.gain(3, 0.0625);
+  mixer_group_4.gain(0, 0.0625);
+  mixer_group_4.gain(1, 0.0625);
+  mixer_group_4.gain(2, 0.0625);
+  mixer_group_4.gain(3, 0.0625);
+  mixer_all_voices.gain(0, 0.4);
+  mixer_all_voices.gain(1, 0.4);
+  mixer_all_voices.gain(2, 0.4);
+  mixer_all_voices.gain(3, 0.4);
+  amp1.gain(2.5);
+
+  // stop processing while configuring things
+  AudioNoInterrupts();
 
   // initialize envelopes
   for (int h = 0; h < VOICES; h++)
@@ -231,12 +268,6 @@ void setup() {
   filter1.frequency(vcfCutoff);
   filter1.resonance(vcfResonance);
   filter1.octaveControl(7); // default to the maximum range
-
-  // Disable the audio codec first
-  codecControl.disable();
-  delay(100);
-  delay(100);
-  codecControl.enable();
 
   // resume processing
   AudioInterrupts();
@@ -255,6 +286,15 @@ void setup() {
     // the MIDI channel will default to 1
     EEPROM.write(EE_MIDI_CHANNEL, myChannel);
   }
+
+  myChannel = 11;
+  
+  // MIDI setup
+  MIDI.begin(myChannel);  
+  MIDI.setHandleNoteOn(doNoteOn); 
+  MIDI.setHandleControlChange(doCC); 
+  MIDI.setHandleNoteOff(doNoteOff); 
+  MIDI.setHandlePitchBend(doBend);
   
   // Setup the controls. The return value is the handle to use when checking for control changes, etc.
   // pushbuttons
@@ -269,21 +309,16 @@ void setup() {
   controls.setOutput(led1Handle, 0);
   led2Handle = controls.addOutput(BA_EXPAND_LED2_PIN);
   controls.setOutput(led2Handle, 0);
-
-  // MIDI setup
-  MIDI.begin(myChannel);  
-  MIDI.setHandleNoteOn(doNoteOn); 
-  MIDI.setHandleControlChange(doCC); 
-  MIDI.setHandleNoteOff(doNoteOff); 
-  MIDI.setHandlePitchBend(doBend);
-
+  
   controls.setOutput(led1Handle, 1);
-  delay(500);
+  delay(200);
   controls.setOutput(led1Handle, 0);
-  delay(500);
+  delay(200);
   controls.setOutput(led2Handle, 1);
-  delay(500);
+  delay(200);
   controls.setOutput(led2Handle, 0);
+
+  //Serial.println("end of setup");
   
 }
 
@@ -292,7 +327,6 @@ void setup() {
 //---------------------------------------------------------------------------------------------//
 void loop()
 {
-   
   // get MIDI notes if available
   MIDI.read();
 
@@ -312,7 +346,19 @@ void loop()
   }
   // check button 2 (right)
   // just toggele the led for now
-  controls.setOutput(led2Handle, controls.getSwitchValue(led2Handle));
+  if (controls.isSwitchToggled(waveformHandle))
+  {
+    if (isLed2)
+    {
+      controls.setOutput(led2Handle, 0);
+      isLed2 = 0;
+    }
+    else
+    {
+      controls.setOutput(led2Handle, 1);
+      isLed2 = 1;
+    }
+  }
   
 //  // set the MIDI channel if the button is pressed
 //  if (channelButton.update())
@@ -327,27 +373,32 @@ void loop()
   // attack
   if (controls.checkPotValue(attackHandle, potValue))
   {
-    vcaAttack = (potValue / 1023.0) * MAX_EG_TIME;
+    vcaAttack = (potValue * MAX_EG_TIME);
+    //Serial.println(String("vcaAttack: ") + vcaAttack);
     for (int g = 0; g < VOICES; g++)
     {
       myEnvelope[g]->attack(vcaAttack);
     }
   }
+  
   // release
   if (controls.checkPotValue(releaseHandle, potValue))
   {
-    vcaRelease = (potValue / 1023.0) * MAX_EG_TIME;
+    vcaRelease = (potValue * MAX_EG_TIME);
+    //Serial.println(String("vcaRelease: ") + vcaRelease);
     for (int f = 0; f < VOICES; f++)
     {
-      myEnvelope[f]->attack(vcaRelease);
+      myEnvelope[f]->release(vcaRelease);
     }
   }
+  
   // cutoff or pwm
-  if (controls.checkPotValue(releaseHandle, potValue))
+  if (controls.checkPotValue(filterHandle, potValue))
   {
     if (isPwm)
     {
-      pwmLevel = potValue / 1023.0;
+      pwmLevel = potValue;
+      //Serial.println(String("pwmLevel: ") + pwmLevel);
       for (int e = 0; e < VOICES; e++)
       {
         AudioNoInterrupts();
@@ -357,7 +408,8 @@ void loop()
     }
     else
     {
-      vcfCutoff = (potValue / 1023.0) * 10000 + 20;
+      vcfCutoff = (potValue * 10000 + 20);
+      //Serial.println(String("vcfCutoff: ") + vcfCutoff);
       filter1.frequency(vcfCutoff);
     }
   }
@@ -369,6 +421,8 @@ void loop()
 //---------------------------------------------------------------------------------------------//
 void doNoteOn(byte channel, byte pitch, byte velocity)
 {
+  Serial.println("got a note");
+  
   // flag if a free voice was found 
   unsigned int voicesFree = 0;
   // the voice to be used
@@ -377,13 +431,15 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
   byte seqNo = 0;
   int i;
 
+  Serial.println("doNoteOn");
+
   digitalWrite(LED_PIN, HIGH);
 
   // try to find a free voice to play the note
   for (i = 0; i < VOICES; i++)
   {
     // if a free voice is found, use it
-    if (notes[i].mySequence == 0)
+    if ((notes[i].mySequence == 0) && !(myEnvelope[i]->isActive()))
     {
       notes[i].myPitch = pitch;
       notes[i].myVelocity = velocity;
