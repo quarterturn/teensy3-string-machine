@@ -13,18 +13,30 @@ AudioOutputI2S           i2sOut0;
 
 #include <MIDI.h>
 #include <EEPROM.h>
+#include "custWaveforms.h"
+#include <math.h>
 
 // how many voices do we have?
-#define VOICES 16
+#define VOICES 32
 
 // maxium EG time for any envelope phase in milliseconds
-#define MAX_EG_TIME 1489
+#define MAX_EG_TIME 3000
 
 #define CHANNEL_SET_PIN 2
 #define EE_CHECKBYTE_1 1022
 #define EE_CHECKBYTE_2 1023
 #define EE_MIDI_CHANNEL 11
 #define LED_PIN 13
+
+// two seconds for a long button press
+#define LONG_PRESS 2000L
+
+// 2 millseconds for the sinewave LFO update
+#define LFO_PERIOD 3000L
+// 2 seconds for LFO cycle
+// 2 ms is 500 updates/s
+// so 1000 would be 2 seconds
+#define BIQUAD_LFO_RANGE 1500
 
 // midi channel; default to 11
 unsigned int myChannel = 11;
@@ -66,11 +78,30 @@ AudioEffectEnvelope envelope13;
 AudioEffectEnvelope envelope14;
 AudioEffectEnvelope envelope15;
 AudioEffectEnvelope envelope16;
+AudioEffectEnvelope envelope17;
+AudioEffectEnvelope envelope18;
+AudioEffectEnvelope envelope19;
+AudioEffectEnvelope envelope20;
+AudioEffectEnvelope envelope21;
+AudioEffectEnvelope envelope22;
+AudioEffectEnvelope envelope23;
+AudioEffectEnvelope envelope24;
+AudioEffectEnvelope envelope25;
+AudioEffectEnvelope envelope26;
+AudioEffectEnvelope envelope27;
+AudioEffectEnvelope envelope28;
+AudioEffectEnvelope envelope29;
+AudioEffectEnvelope envelope30;
+AudioEffectEnvelope envelope31;
+AudioEffectEnvelope envelope32;
 AudioEffectEnsemble ensemble1;
 
 
 // array of envelopes
-AudioEffectEnvelope *myEnvelope[16] = { &envelope1, &envelope2, &envelope3, &envelope4, &envelope5, &envelope6, &envelope7, &envelope8, &envelope9, &envelope10, &envelope11, &envelope12, &envelope13, &envelope14, &envelope15, &envelope16 };
+AudioEffectEnvelope *myEnvelope[VOICES] = { &envelope1, &envelope2, &envelope3, &envelope4, &envelope5, &envelope6, \
+&envelope7, &envelope8, &envelope9, &envelope10, &envelope11, &envelope12, &envelope13, &envelope14, &envelope15, \
+&envelope16, &envelope17, &envelope18, &envelope19, &envelope20, &envelope21, &envelope22, &envelope23, &envelope24, \
+&envelope25, &envelope26, &envelope27, &envelope28, &envelope29, &envelope30, &envelope31, &envelope32 };
 
 AudioSynthWaveform waveform1;
 AudioSynthWaveform waveform2;
@@ -88,9 +119,28 @@ AudioSynthWaveform waveform13;
 AudioSynthWaveform waveform14;
 AudioSynthWaveform waveform15;
 AudioSynthWaveform waveform16;
+AudioSynthWaveform waveform17;
+AudioSynthWaveform waveform18;
+AudioSynthWaveform waveform19;
+AudioSynthWaveform waveform20;
+AudioSynthWaveform waveform21;
+AudioSynthWaveform waveform22;
+AudioSynthWaveform waveform23;
+AudioSynthWaveform waveform24;
+AudioSynthWaveform waveform25;
+AudioSynthWaveform waveform26;
+AudioSynthWaveform waveform27;
+AudioSynthWaveform waveform28;
+AudioSynthWaveform waveform29;
+AudioSynthWaveform waveform30;
+AudioSynthWaveform waveform31;
+AudioSynthWaveform waveform32;
 
 // array of waveforms
-AudioSynthWaveform *myWaveform[16] = { &waveform1, &waveform2, &waveform3, &waveform4, &waveform5, &waveform6, &waveform7, &waveform8, &waveform9, &waveform10, &waveform11, &waveform12, &waveform13, &waveform14, &waveform15, &waveform16};
+AudioSynthWaveform *myWaveform[VOICES] = { &waveform1, &waveform2, &waveform3, &waveform4, &waveform5, &waveform6, \
+&waveform7, &waveform8, &waveform9, &waveform10, &waveform11, &waveform12, &waveform13, &waveform14, &waveform15, \
+&waveform16, &waveform17, &waveform18, &waveform19, &waveform20, &waveform21, &waveform22, &waveform23, &waveform24, \
+&waveform25, &waveform26, &waveform27, &waveform28, &waveform29, &waveform30, &waveform31, &waveform32};
 
 AudioConnection          patchCord1(waveform1, envelope1);
 AudioConnection          patchCord2(waveform2, envelope2);
@@ -108,42 +158,118 @@ AudioConnection          patchCord13(waveform13, envelope13);
 AudioConnection          patchCord14(waveform14, envelope14);
 AudioConnection          patchCord15(waveform15, envelope15);
 AudioConnection          patchCord16(waveform16, envelope16);
+AudioConnection          patchCord17(waveform17, envelope17);
+AudioConnection          patchCord18(waveform18, envelope18);
+AudioConnection          patchCord19(waveform19, envelope19);
+AudioConnection          patchCord20(waveform20, envelope20);
+AudioConnection          patchCord21(waveform21, envelope21);
+AudioConnection          patchCord22(waveform22, envelope22);
+AudioConnection          patchCord23(waveform23, envelope23);
+AudioConnection          patchCord24(waveform24, envelope24);
+AudioConnection          patchCord25(waveform25, envelope25);
+AudioConnection          patchCord26(waveform26, envelope26);
+AudioConnection          patchCord27(waveform27, envelope27);
+AudioConnection          patchCord28(waveform28, envelope28);
+AudioConnection          patchCord29(waveform29, envelope29);
+AudioConnection          patchCord30(waveform30, envelope30);
+AudioConnection          patchCord31(waveform31, envelope31);
+AudioConnection          patchCord32(waveform32, envelope32);
 
 AudioMixer4              mixer_group_1;
 AudioMixer4              mixer_group_2;
 AudioMixer4              mixer_group_3;
 AudioMixer4              mixer_group_4;
+AudioMixer4              mixer_group_5;
+AudioMixer4              mixer_group_6;
+AudioMixer4              mixer_group_7;
+AudioMixer4              mixer_group_8;
+
+// array of waveforms
+AudioMixer4 *myMixerGroup[8] = { &mixer_group_1, &mixer_group_2, &mixer_group_3, &mixer_group_4, &mixer_group_5, \
+&mixer_group_6, &mixer_group_7, &mixer_group_8};
+
+AudioMixer4              mixer_combo_1;
+AudioMixer4              mixer_combo_2;
+
 AudioMixer4              mixer_all_voices;
+
+AudioMixer4              mixer_phaser_1;
+AudioMixer4              mixer_phaser_2;
+
 AudioFilterStateVariable filter1;
 AudioAmplifier           amp1;
 
-AudioConnection          patchCord17(envelope1, 0, mixer_group_1, 0);
-AudioConnection          patchCord18(envelope2, 0, mixer_group_1, 1);
-AudioConnection          patchCord19(envelope3, 0, mixer_group_1, 2);
-AudioConnection          patchCord20(envelope4, 0, mixer_group_2, 0);
-AudioConnection          patchCord21(envelope5, 0, mixer_group_2, 1);
-AudioConnection          patchCord22(envelope6, 0, mixer_group_1, 3);
-AudioConnection          patchCord23(envelope7, 0, mixer_group_2, 2);
-AudioConnection          patchCord24(envelope8, 0, mixer_group_3, 0);
-AudioConnection          patchCord25(envelope9, 0, mixer_group_3, 1);
-AudioConnection          patchCord26(envelope10, 0, mixer_group_2, 3);
-AudioConnection          patchCord27(envelope11, 0, mixer_group_3, 2);
-AudioConnection          patchCord28(envelope12, 0, mixer_group_3, 3);
-AudioConnection          patchCord29(envelope13, 0, mixer_group_4, 0);
-AudioConnection          patchCord30(envelope14, 0, mixer_group_4, 1);
-AudioConnection          patchCord31(envelope15, 0, mixer_group_4, 2);
-AudioConnection          patchCord32(envelope16, 0, mixer_group_4, 3);
-AudioConnection          patchCord33(mixer_group_1, 0, mixer_all_voices, 0);
-AudioConnection          patchCord34(mixer_group_2, 0, mixer_all_voices, 1);
-AudioConnection          patchCord35(mixer_group_3, 0, mixer_all_voices, 2);
-AudioConnection          patchCord36(mixer_group_4, 0, mixer_all_voices, 3);
-AudioConnection          patchCord37(mixer_all_voices, 0, filter1, 0);
-AudioConnection          patchCord38(mixer_all_voices, 0, filter1, 1);
-AudioConnection          patchCord39(filter1, 0, amp1, 0);
-AudioConnection          patchCord42(amp1, 0, ensemble1, 0);
-AudioConnection          patchCord40(ensemble1, 0, i2sOut0, 0);
-AudioConnection          patchCord41(ensemble1, 1, i2sOut0, 1);
+// lfo
+AudioSynthWaveformSine   sine1;
+// for phaser effect
+AudioFilterBiquad        biquad1;
+AudioFilterBiquad        biquad2;
+
+AudioConnection          patchCord34(envelope1, 0, mixer_group_1, 0);
+AudioConnection          patchCord35(envelope2, 0, mixer_group_1, 1);
+AudioConnection          patchCord36(envelope3, 0, mixer_group_1, 2);
+AudioConnection          patchCord37(envelope4, 0, mixer_group_1, 3);
+AudioConnection          patchCord38(envelope5, 0, mixer_group_2, 0);
+AudioConnection          patchCord39(envelope6, 0, mixer_group_2, 1);
+AudioConnection          patchCord40(envelope7, 0, mixer_group_2, 2);
+AudioConnection          patchCord41(envelope8, 0, mixer_group_2, 3);
+AudioConnection          patchCord42(envelope9, 0, mixer_group_3, 0);
+AudioConnection          patchCord43(envelope10, 0, mixer_group_3, 1);
+AudioConnection          patchCord44(envelope11, 0, mixer_group_3, 2);
+AudioConnection          patchCord45(envelope12, 0, mixer_group_3, 3);
+AudioConnection          patchCord46(envelope13, 0, mixer_group_4, 0);
+AudioConnection          patchCord47(envelope14, 0, mixer_group_4, 1);
+AudioConnection          patchCord48(envelope15, 0, mixer_group_4, 2);
+AudioConnection          patchCord49(envelope16, 0, mixer_group_4, 3);
+AudioConnection          patchCord50(envelope17, 0, mixer_group_5, 0);
+AudioConnection          patchCord51(envelope18, 0, mixer_group_5, 1);
+AudioConnection          patchCord52(envelope19, 0, mixer_group_5, 2);
+AudioConnection          patchCord53(envelope20, 0, mixer_group_5, 3);
+AudioConnection          patchCord54(envelope21, 0, mixer_group_6, 0);
+AudioConnection          patchCord55(envelope22, 0, mixer_group_6, 1);
+AudioConnection          patchCord56(envelope23, 0, mixer_group_6, 2);
+AudioConnection          patchCord57(envelope24, 0, mixer_group_6, 3);
+AudioConnection          patchCord58(envelope25, 0, mixer_group_7, 0);
+AudioConnection          patchCord59(envelope26, 0, mixer_group_7, 1);
+AudioConnection          patchCord60(envelope27, 0, mixer_group_7, 2);
+AudioConnection          patchCord61(envelope28, 0, mixer_group_7, 3);
+AudioConnection          patchCord62(envelope29, 0, mixer_group_8, 0);
+AudioConnection          patchCord63(envelope30, 0, mixer_group_8, 1);
+AudioConnection          patchCord64(envelope31, 0, mixer_group_8, 2);
+AudioConnection          patchCord65(envelope32, 0, mixer_group_8, 3);
+
+AudioConnection          patchCord66(mixer_group_1, 0, mixer_combo_1, 0);
+AudioConnection          patchCord67(mixer_group_2, 0, mixer_combo_1, 1);
+AudioConnection          patchCord68(mixer_group_3, 0, mixer_combo_1, 2);
+AudioConnection          patchCord69(mixer_group_4, 0, mixer_combo_1, 3);
+AudioConnection          patchCord70(mixer_group_5, 0, mixer_combo_2, 0);
+AudioConnection          patchCord71(mixer_group_6, 0, mixer_combo_2, 1);
+AudioConnection          patchCord72(mixer_group_7, 0, mixer_combo_2, 2);
+AudioConnection          patchCord73(mixer_group_8, 0, mixer_combo_2, 3);
+
+AudioConnection          patchCord74(mixer_combo_1, 0, mixer_all_voices, 0);
+AudioConnection          patchCord75(mixer_combo_2, 0, mixer_all_voices, 1);
+
+AudioConnection          patchCord76(mixer_all_voices, 0, filter1, 0);
+AudioConnection          patchCord77(mixer_all_voices, 0, filter1, 1);
+
+AudioConnection          patchCord78(filter1, 0, amp1, 0);
+
+AudioConnection          patchCord79(amp1, 0, ensemble1, 0);
+
+AudioConnection          patchCord80(ensemble1, 0, mixer_phaser_1, 0);
+AudioConnection          patchCord81(ensemble1, 1, mixer_phaser_2, 0);
+AudioConnection          patchCord82(ensemble1, 0, biquad1, 0);
+AudioConnection          patchCord83(ensemble1, 1, biquad2, 0);
+AudioConnection          patchCord84(biquad1, 0, mixer_phaser_1, 1);
+AudioConnection          patchCord85(biquad2, 0, mixer_phaser_2, 1);
+
+AudioConnection          patchCord86(mixer_phaser_1, 0, i2sOut0, 0);
+AudioConnection          patchCord87(mixer_phaser_2, 0, i2sOut0, 1);
+
 AudioControlWM8731       wm8731_1;       //xy=1428,56
+
+const int16_t *customWaveforms[8] = { custWave1, custWave2, custWave3, custWave4, custWave5, custWave6, custWave7, custWave8 };
 
 // pitch bend
 float pitchBend = 0;
@@ -157,16 +283,10 @@ unsigned int vcaRelease = 500;
 float vcfCutoff = 20; // not sure if 20 Hz is the default if not defined
 float vcfResonance = 0.1; // default to zero resonance
 
-// synth_waveform.h definitions
-// #define WAVEFORM_SINE      0
-// #define WAVEFORM_SAWTOOTH  1
-// #define WAVEFORM_SQUARE    2
-// #define WAVEFORM_TRIANGLE  3
-// #define WAVEFORM_ARBITRARY 4
-// #define WAVEFORM_PULSE     5
 
-// oscillator waveform (see above)
-int oscWF = 1;
+
+// oscillator waveform index
+int oscWF = 0;
 // oscillator frequency
 float oscFreq = 0.0;
 // oscillator level
@@ -189,23 +309,31 @@ constexpr int  potCalibMin = 1;
 constexpr int  potCalibMax = 1023;
 constexpr bool potSwapDirection = true;
 
-// track if knob 3 (center) controls pwm
-int isPwm = 0;
+// track led1
+int isLed1 = 0;
 // track led2
 int isLed2 = 0;
 
 // Create physical controls for Expansion Board, 2 switches, 3 pots, 0 encoders, 2 LEDs
 BAPhysicalControls controls(BA_EXPAND_NUM_SW, BA_EXPAND_NUM_POT, BA_EXPAND_NUM_ENC, BA_EXPAND_NUM_LED);
 
-int pwmHandle, waveformHandle, attackHandle, releaseHandle, filterHandle, led1Handle, led2Handle;
+int buttonRHandle, centerKnobHandle, attackHandle, releaseHandle, buttonLHandle, ledLHandle, ledRHandle;
 
 float potValue;
+
+long buttonTimer;
+int lPressed = 0;
+
+float biquadFrequency = 3000.0;
+long biquadLfoUpdateTimer;
+int lfoIndex = 0;
+float phaserDryWet = 0.0;
 
 //---------------------------------------------------------------------------------------------//
 // setup
 //---------------------------------------------------------------------------------------------//
 void setup() {
-  //Serial.begin(115200);
+  Serial.begin(115200);
 
   // set up the LED pin
   pinMode(LED_PIN, OUTPUT);
@@ -217,6 +345,7 @@ void setup() {
   codecControl.disable();
   delay(100);
   codecControl.enable();
+  delay(100);
   codecControl.setHeadphoneVolume(1.0);
 
   // initialize the notes struct
@@ -229,26 +358,27 @@ void setup() {
     notes[j].mySequence = 0;
   }
 
-  mixer_group_1.gain(0, 0.0625);
-  mixer_group_1.gain(1, 0.0625);
-  mixer_group_1.gain(2, 0.0625);
-  mixer_group_1.gain(3, 0.0625);
-  mixer_group_2.gain(0, 0.0625);
-  mixer_group_2.gain(1, 0.0625);
-  mixer_group_2.gain(2, 0.0625);
-  mixer_group_2.gain(3, 0.0625);
-  mixer_group_3.gain(0, 0.0625);
-  mixer_group_3.gain(1, 0.0625);
-  mixer_group_3.gain(2, 0.0625);
-  mixer_group_3.gain(3, 0.0625);
-  mixer_group_4.gain(0, 0.0625);
-  mixer_group_4.gain(1, 0.0625);
-  mixer_group_4.gain(2, 0.0625);
-  mixer_group_4.gain(3, 0.0625);
-  mixer_all_voices.gain(0, 0.4);
-  mixer_all_voices.gain(1, 0.4);
-  mixer_all_voices.gain(2, 0.4);
-  mixer_all_voices.gain(3, 0.4);
+  // set gain
+  for (int gc = 0; gc < 8; gc++)
+  {
+    for (int cc = 0; cc < 4; cc++)
+    {
+      myMixerGroup[gc]->gain(cc, 0.25);
+    }  
+  }
+
+  
+  mixer_combo_1.gain(0, 0.25);
+  mixer_combo_1.gain(1, 0.25);
+  mixer_combo_1.gain(2, 0.25);
+  mixer_combo_1.gain(3, 0.25);
+  mixer_combo_2.gain(0, 0.25);
+  mixer_combo_2.gain(1, 0.25);
+  mixer_combo_2.gain(2, 0.25);
+  mixer_combo_2.gain(3, 0.25);
+  
+  mixer_all_voices.gain(0, 0.5);
+  mixer_all_voices.gain(1, 0.5);
   amp1.gain(2.5);
 
   // stop processing while configuring things
@@ -269,6 +399,13 @@ void setup() {
   filter1.resonance(vcfResonance);
   filter1.octaveControl(7); // default to the maximum range
 
+  biquad1.setNotch(0, biquadFrequency, 0.3);
+  biquad2.setNotch(0, biquadFrequency, 0.3);
+
+  // initialize LFO
+  sine1.amplitude(1.0);
+  sine1.frequency(0.5);
+
   // resume processing
   AudioInterrupts();
 
@@ -286,8 +423,6 @@ void setup() {
     // the MIDI channel will default to 1
     EEPROM.write(EE_MIDI_CHANNEL, myChannel);
   }
-
-  myChannel = 11;
   
   // MIDI setup
   MIDI.begin(myChannel);  
@@ -298,26 +433,28 @@ void setup() {
   
   // Setup the controls. The return value is the handle to use when checking for control changes, etc.
   // pushbuttons
-  pwmHandle = controls.addSwitch(BA_EXPAND_SW1_PIN); // will be used for vox humana control
-  waveformHandle = controls.addSwitch(BA_EXPAND_SW2_PIN); // will be used for sub-octave
+  buttonLHandle = controls.addSwitch(BA_EXPAND_SW1_PIN); // will be used for vox humana control
+  buttonRHandle = controls.addSwitch(BA_EXPAND_SW2_PIN); // will be used for sub-octave
   // pots
   attackHandle = controls.addPot(BA_EXPAND_POT1_PIN, potCalibMin, potCalibMax, potSwapDirection); // control the amount of delay
   releaseHandle = controls.addPot(BA_EXPAND_POT2_PIN, potCalibMin, potCalibMax, potSwapDirection); 
-  filterHandle = controls.addPot(BA_EXPAND_POT3_PIN, potCalibMin, potCalibMax, potSwapDirection); 
+  centerKnobHandle = controls.addPot(BA_EXPAND_POT3_PIN, potCalibMin, potCalibMax, potSwapDirection); 
   // leds
-  led1Handle = controls.addOutput(BA_EXPAND_LED1_PIN);
-  controls.setOutput(led1Handle, 0);
-  led2Handle = controls.addOutput(BA_EXPAND_LED2_PIN);
-  controls.setOutput(led2Handle, 0);
+  ledLHandle = controls.addOutput(BA_EXPAND_LED1_PIN);
+  controls.setOutput(ledLHandle, 0);
+  ledRHandle = controls.addOutput(BA_EXPAND_LED2_PIN);
+  controls.setOutput(ledRHandle, 0);
   
-  controls.setOutput(led1Handle, 1);
+  controls.setOutput(ledLHandle, 1);
   delay(200);
-  controls.setOutput(led1Handle, 0);
+  controls.setOutput(ledLHandle, 0);
   delay(200);
-  controls.setOutput(led2Handle, 1);
+  controls.setOutput(ledRHandle, 1);
   delay(200);
-  controls.setOutput(led2Handle, 0);
+  controls.setOutput(ledRHandle, 0);
+  delay(50);
 
+  biquadLfoUpdateTimer = micros();
   //Serial.println("end of setup");
   
 }
@@ -327,47 +464,60 @@ void setup() {
 //---------------------------------------------------------------------------------------------//
 void loop()
 {
+
+  // find completed notes and mark the voice as available
+  for (int p = 0; p < VOICES; p++)
+  {
+    // first clean up completed notes
+    if (!(myEnvelope[p]->isActive()))
+      notes[p].mySequence = 0;  
+  }
+  
   // get MIDI notes if available
   MIDI.read();
 
-  // check button 1 (left)
-  if (controls.isSwitchToggled(pwmHandle))
+  // check for long or short press
+  if ((controls.isSwitchHeld(buttonLHandle)))
   {
-    if (isPwm)
-    {
-      controls.setOutput(led1Handle, 0);
-      isPwm = 0;
-    }
-    else
-    {
-      controls.setOutput(led1Handle, 1);
-      isPwm = 1;
-    }   
+    buttonTimer = millis();
+    while (controls.isSwitchHeld(buttonLHandle));
+    lPressed = 1;
   }
-  // check button 2 (right)
-  // just toggele the led for now
-  if (controls.isSwitchToggled(waveformHandle))
+
+  // check button 1 (left)
+  if (lPressed)
   {
-    if (isLed2)
+    if ((millis() - buttonTimer) < LONG_PRESS)
     {
-      controls.setOutput(led2Handle, 0);
-      isLed2 = 0;
+      if (isLed1)
+      {
+        controls.setOutput(ledLHandle, 0);
+        isLed1 = 0;
+      }
+      else
+      {
+        controls.setOutput(ledLHandle, 1);
+        isLed1 = 1;
+      }
     }
     else
     {
-      controls.setOutput(led2Handle, 1);
-      isLed2 = 1;
+      isLed1 = setMIDIChannel(isLed1);
+      MIDI.begin(myChannel);
     }
+    lPressed = 0;
   }
   
-//  // set the MIDI channel if the button is pressed
-//  if (channelButton.update())
-//  {
-//    if (channelButton.read() == LOW)
-//    {
-//      setMIDIChannel();
-//    }
-//  }
+  // check button 2 (right)
+  if (controls.isSwitchToggled(buttonRHandle))
+  {
+    oscWF++;
+    if (oscWF > 7)
+      oscWF = 0;
+    controls.setOutput(ledRHandle, 1);
+    delay(100);
+    controls.setOutput(ledRHandle, 0);
+  }
 
   // read the controls
   // attack
@@ -392,36 +542,47 @@ void loop()
     }
   }
   
-  // cutoff or pwm
-  if (controls.checkPotValue(filterHandle, potValue))
+  // cutoff
+  if (controls.checkPotValue(centerKnobHandle, potValue))
   {
-    if (isPwm)
+    if (isLed1 == 0)
     {
-      pwmLevel = potValue;
-      //Serial.println(String("pwmLevel: ") + pwmLevel);
-      for (int e = 0; e < VOICES; e++)
-      {
-        AudioNoInterrupts();
-        myWaveform[e]->pulseWidth(pwmLevel);
-        AudioInterrupts();
-      }
+      vcfCutoff = (potValue * 10000 + 20);
+      filter1.frequency(vcfCutoff);
     }
     else
     {
-      vcfCutoff = (potValue * 10000 + 20);
-      //Serial.println(String("vcfCutoff: ") + vcfCutoff);
-      filter1.frequency(vcfCutoff);
+      mixer_phaser_1.gain(0, 1 - potValue);
+      mixer_phaser_1.gain(1, potValue);
+      mixer_phaser_2.gain(0, 1 - potValue);
+      mixer_phaser_2.gain(1, potValue);
     }
   }
+
   
-}
+  // update the biquad filter frequency
+  if ((micros() - biquadLfoUpdateTimer) >= LFO_PERIOD)
+  {
+    lfoIndex++;
+    if (lfoIndex > BIQUAD_LFO_RANGE)
+      lfoIndex = 0;
+    biquad1.setNotch(0, ((sin((( 2.0 * M_PI) / BIQUAD_LFO_RANGE) * lfoIndex)) * 750) + 1000, 0.9);
+    biquad2.setNotch(0, ((sin((( 2.0 * M_PI) / BIQUAD_LFO_RANGE) * lfoIndex)) * 750) + 1000, 0.9);
+    biquad1.setNotch(1, ((sin((( 2.0 * M_PI) / BIQUAD_LFO_RANGE) * lfoIndex)) * 1000) + 2000, 0.9);
+    biquad2.setNotch(1, ((sin((( 2.0 * M_PI) / BIQUAD_LFO_RANGE) * lfoIndex)) * 1000) + 2000, 0.9);
+    biquad1.setNotch(2, ((sin((( 2.0 * M_PI) / BIQUAD_LFO_RANGE) * lfoIndex)) * 3000) + 5000, 0.9);
+    biquad2.setNotch(2, ((sin((( 2.0 * M_PI) / BIQUAD_LFO_RANGE) * lfoIndex)) * 3000) + 5000, 0.9);
+    biquadLfoUpdateTimer = micros();
+  }
+  
+} 
 
 //---------------------------------------------------------------------------------------------//
 // function doNoteOn
 //---------------------------------------------------------------------------------------------//
 void doNoteOn(byte channel, byte pitch, byte velocity)
 {
-  Serial.println("got a note");
+  //Serial.println("got a note");
   
   // flag if a free voice was found 
   unsigned int voicesFree = 0;
@@ -431,13 +592,16 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
   byte seqNo = 0;
   int i;
 
-  Serial.println("doNoteOn");
+  //Serial.println("doNoteOn");
 
   digitalWrite(LED_PIN, HIGH);
 
   // try to find a free voice to play the note
   for (i = 0; i < VOICES; i++)
   {
+    // first clean up completed notes
+    if (!(myEnvelope[i]->isActive()))
+      notes[i].mySequence = 0;
     // if a free voice is found, use it
     if ((notes[i].mySequence == 0) && !(myEnvelope[i]->isActive()))
     {
@@ -450,8 +614,8 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
       // store the voice used so the right oscillators can be turned on
       voiceUsed = i;
       
-      Serial.print("Using voice ");
-      Serial.println(voiceUsed);
+      //Serial.print("Using voice ");
+      //Serial.println(voiceUsed);
       
       break;
     }
@@ -481,8 +645,8 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
     notes[voiceUsed].myPitch = pitch;
     notes[voiceUsed].myVelocity = velocity;
         
-    Serial.print("Stealing voice ");
-    Serial.println(voiceUsed);
+    //Serial.print("Stealing voice ");
+    //Serial.println(voiceUsed);
 
     AudioNoInterrupts();
 
@@ -510,13 +674,22 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
   }
 
   AudioNoInterrupts();
-  myWaveform[voiceUsed]->begin(((velocity / 127.0) * oscLevel), oscFreq, oscWF);
-  myWaveform[voiceUsed]->pulseWidth(pwmLevel);
+  myWaveform[voiceUsed]->begin(WAVEFORM_ARBITRARY);
+  myWaveform[voiceUsed]->arbitraryWaveform(customWaveforms[oscWF], 172.0);
+  myWaveform[voiceUsed]->frequency(oscFreq);
+  myWaveform[voiceUsed]->amplitude((velocity / 127.0) * oscLevel);
   myEnvelope[voiceUsed]->noteOn();
   AudioInterrupts();
 
   
   digitalWrite(LED_PIN, LOW);
+
+  Serial.println("CPU: ");
+  Serial.print(AudioProcessorUsage());
+  Serial.print("    ");
+  Serial.print("Memory: ");
+  Serial.print(AudioMemoryUsage());
+  Serial.println(" ");
   
 }
 
@@ -542,8 +715,8 @@ void doNoteOff(byte channel, byte pitch, byte velocity)
       }
   }
   
-  Serial.print("Releasing voice ");
-  Serial.println(voiceUsed);
+  //Serial.print("Releasing voice ");
+  //Serial.println(voiceUsed);
 
   AudioNoInterrupts();
   myEnvelope[voiceUsed]->noteOff();
@@ -588,8 +761,76 @@ void doBend(byte channel, int bend)
       {
         oscFreq = oscFreq + ((oscFreq / 2) * pitchBend);
       }
-      myWaveform[k]->begin(((notes[k].myVelocity / 127.0) * oscLevel), oscFreq, oscWF);
+      //myWaveform[k]->begin(oscWF);
+      //myWaveform[k]->arbitraryWaveform(custWave1, 172.0);
+      myWaveform[k]->frequency(oscFreq);
+      myWaveform[k]->amplitude((notes[k].myVelocity / 127.0) * oscLevel);
+      //myEnvelope[k]->noteOn();
     }
   }
   AudioInterrupts();
+}
+
+//---------------------------------------------------------------------------------------------//
+// function setMIDIChannel
+//---------------------------------------------------------------------------------------------//
+int setMIDIChannel(int ledState)
+{
+  int clickCount = 0;
+  unsigned long previousMillis;
+    
+  // light the led for 1.0 sec to indicate set mode
+  if (ledState)
+  {
+    controls.setOutput(ledLHandle, 0);
+    delay(500);
+  }
+  controls.setOutput(ledLHandle, 1);
+  delay(1000);
+  controls.setOutput(ledLHandle, 0);
+  
+  // loop until the channel button is held down
+  while (1)
+  {
+    // time each press
+    if ((controls.isSwitchHeld(buttonLHandle)))
+    {
+      previousMillis = millis();
+      while (controls.isSwitchHeld(buttonLHandle));
+      if ((millis() - previousMillis) < LONG_PRESS)
+      {
+        clickCount++;
+        Serial.println(clickCount);
+      }
+      // if long press and at least one short press
+      if (((millis() - previousMillis) > LONG_PRESS) && (clickCount > 0))
+      {
+        Serial.println((millis() - previousMillis));
+        break;
+      }
+    }    
+  }
+      
+  // light the led for 1.0 sec to indicate set mode done
+  controls.setOutput(ledLHandle, 1);
+  delay(1000);
+  controls.setOutput(ledLHandle, 0);
+  
+  // blink back the channel
+  for (int r = 0; r <= clickCount; r++)
+  {
+    controls.setOutput(ledLHandle, 1);
+    delay(50);
+    controls.setOutput(ledLHandle, 0);
+    delay(500);
+  }
+ 
+  // store the setting to EEPROM if not zero or greater than 15
+  if ((clickCount > 0) && (clickCount < 16))
+  {
+    EEPROM.write(EE_MIDI_CHANNEL, clickCount);
+    myChannel = clickCount;
+  }
+ 
+  return ledState;
 }
