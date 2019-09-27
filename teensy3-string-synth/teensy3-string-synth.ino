@@ -1,3 +1,12 @@
+//---------------------------------------------------------------------------------------------//
+// Teensy 3 String Machine
+// A 32-voice synthesizer focused on replicating the top-divider plus ensemble chorus sound
+// CPU runs about 30% on a Teensy 3.6. Uncomment the CPU utilization report code if running
+// it on a Teensy < 3.6.
+// 
+//---------------------------------------------------------------------------------------------//
+
+
 // PJRC audio library
 #include <Audio.h>
 
@@ -198,6 +207,7 @@ AudioMixer4              mixer_phaser_2;
 
 AudioFilterStateVariable filter1;
 AudioAmplifier           amp1;
+AudioAmplifier           amp2;
 
 // lfo
 AudioSynthWaveformSine   sine1;
@@ -253,9 +263,9 @@ AudioConnection          patchCord75(mixer_combo_2, 0, mixer_all_voices, 1);
 AudioConnection          patchCord76(mixer_all_voices, 0, filter1, 0);
 AudioConnection          patchCord77(mixer_all_voices, 0, filter1, 1);
 
-AudioConnection          patchCord78(filter1, 0, amp1, 0);
+AudioConnection          patchCord78(filter1, 0, ensemble1, 0);
 
-AudioConnection          patchCord79(amp1, 0, ensemble1, 0);
+
 
 AudioConnection          patchCord80(ensemble1, 0, mixer_phaser_1, 0);
 AudioConnection          patchCord81(ensemble1, 1, mixer_phaser_2, 0);
@@ -264,8 +274,12 @@ AudioConnection          patchCord83(ensemble1, 1, biquad2, 0);
 AudioConnection          patchCord84(biquad1, 0, mixer_phaser_1, 1);
 AudioConnection          patchCord85(biquad2, 0, mixer_phaser_2, 1);
 
-AudioConnection          patchCord86(mixer_phaser_1, 0, i2sOut0, 0);
-AudioConnection          patchCord87(mixer_phaser_2, 0, i2sOut0, 1);
+AudioConnection          patchCord86(mixer_phaser_1, 0, amp1, 0);
+AudioConnection          patchCord87(mixer_phaser_2, 0, amp2, 0);
+
+AudioConnection          patchCord88(amp1, 0, i2sOut0, 0);
+AudioConnection          patchCord89(amp2, 0, i2sOut0, 1);
+
 
 AudioControlWM8731       wm8731_1;       //xy=1428,56
 
@@ -379,7 +393,8 @@ void setup() {
   
   mixer_all_voices.gain(0, 0.5);
   mixer_all_voices.gain(1, 0.5);
-  amp1.gain(2.5);
+  amp1.gain(2.8);
+  amp2.gain(2.8);
 
   // stop processing while configuring things
   AudioNoInterrupts();
@@ -594,7 +609,7 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
 
   //Serial.println("doNoteOn");
 
-  digitalWrite(LED_PIN, HIGH);
+//  digitalWrite(LED_PIN, HIGH);
 
   // try to find a free voice to play the note
   for (i = 0; i < VOICES; i++)
@@ -682,14 +697,14 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
   AudioInterrupts();
 
   
-  digitalWrite(LED_PIN, LOW);
-
-  Serial.println("CPU: ");
-  Serial.print(AudioProcessorUsage());
-  Serial.print("    ");
-  Serial.print("Memory: ");
-  Serial.print(AudioMemoryUsage());
-  Serial.println(" ");
+//  digitalWrite(LED_PIN, LOW);
+//
+//  Serial.println("CPU: ");
+//  Serial.print(AudioProcessorUsage());
+//  Serial.print("    ");
+//  Serial.print("Memory: ");
+//  Serial.print(AudioMemoryUsage());
+//  Serial.println(" ");
   
 }
 
