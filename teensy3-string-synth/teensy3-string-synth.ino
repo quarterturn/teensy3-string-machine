@@ -343,6 +343,8 @@ long biquadLfoUpdateTimer;
 int lfoIndex = 0;
 float phaserDryWet = 0.0;
 
+float outAmpGain = 2.8;
+
 //---------------------------------------------------------------------------------------------//
 // setup
 //---------------------------------------------------------------------------------------------//
@@ -393,8 +395,8 @@ void setup() {
   
   mixer_all_voices.gain(0, 0.5);
   mixer_all_voices.gain(1, 0.5);
-  amp1.gain(2.8);
-  amp2.gain(2.8);
+  amp1.gain(outAmpGain);
+  amp2.gain(outAmpGain);
 
   // stop processing while configuring things
   AudioNoInterrupts();
@@ -557,7 +559,7 @@ void loop()
     }
   }
   
-  // cutoff
+  // cutoff or phaser dry/wet
   if (controls.checkPotValue(centerKnobHandle, potValue))
   {
     if (isLed1 == 0)
@@ -571,6 +573,10 @@ void loop()
       mixer_phaser_1.gain(1, potValue);
       mixer_phaser_2.gain(0, 1 - potValue);
       mixer_phaser_2.gain(1, potValue);
+      // add more gain as more wet phaser
+      // since the phaser makes it quieter
+      amp1.gain(outAmpGain + potValue);
+      amp2.gain(outAmpGain + potValue);
     }
   }
 
