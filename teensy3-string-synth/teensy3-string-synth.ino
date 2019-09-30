@@ -209,8 +209,6 @@ AudioFilterStateVariable filter1;
 AudioAmplifier           amp1;
 AudioAmplifier           amp2;
 
-// lfo
-AudioSynthWaveformSine   sine1;
 // for phaser effect
 AudioFilterBiquad        biquad1;
 AudioFilterBiquad        biquad2;
@@ -343,7 +341,7 @@ long biquadLfoUpdateTimer;
 int lfoIndex = 0;
 float phaserDryWet = 0.0;
 
-float outAmpGain = 2.8;
+float outAmpGain = 2.5;
 
 //---------------------------------------------------------------------------------------------//
 // setup
@@ -415,13 +413,6 @@ void setup() {
   filter1.frequency(vcfCutoff);
   filter1.resonance(vcfResonance);
   filter1.octaveControl(7); // default to the maximum range
-
-  biquad1.setNotch(0, biquadFrequency, 0.3);
-  biquad2.setNotch(0, biquadFrequency, 0.3);
-
-  // initialize LFO
-  sine1.amplitude(1.0);
-  sine1.frequency(0.5);
 
   // resume processing
   AudioInterrupts();
