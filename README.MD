@@ -1,5 +1,7 @@
 This is a 32-voice 'string machine' meant for the pjrc.com teensy 3.6 and the blackaddr audio interface. It depends on the Teensy Audio Ensemble Chorus library found here: https://github.com/quarterturn/teensy3-ensemble-chorus.
 
+Demo video: https://youtu.be/yDEagM8vqhU
+
 The control layout on the blackaddr audio interface control board is as follows:
 - left knob is 'attack'
 - middle knob is filter cutoff if left LED is not lit
