@@ -3,7 +3,7 @@
 // A 32-voice synthesizer focused on replicating the top-divider plus ensemble chorus sound
 // CPU runs about 30% on a Teensy 3.6. Uncomment the CPU utilization report code if running
 // it on a Teensy < 3.6.
-// 
+//
 //---------------------------------------------------------------------------------------------//
 
 
@@ -27,6 +27,11 @@ AudioOutputI2S           i2sOut0;
 
 // how many voices do we have?
 #define VOICES 32
+
+// how many level one mixers do we have
+#define LEVEL_1_MIXERS 8
+// how many level two mixers do we have
+#define LEVEL_2_MIXERS 2
 
 // maxium EG time for any envelope phase in milliseconds
 #define MAX_EG_TIME 3000
@@ -69,7 +74,7 @@ note notes[VOICES];
 
 
 // array of frequencies corresponding to MIDI notes 0 to 128
-const float noteFreqs[128] = {8.176,8.662,9.177,9.723,10.301,10.913,11.562,12.25,12.978,13.75,14.568,15.434,16.352,17.324,18.354,19.445,20.602,21.827,23.125,24.5,25.957,27.5,29.135,30.868,32.703,34.648,36.708,38.891,41.203,43.654,46.249,48.999,51.913,55,58.27,61.735,65.406,69.296,73.416,77.782,82.407,87.307,92.499,97.999,103.826,110,116.541,123.471,130.813,138.591,146.832,155.563,164.814,174.614,184.997,195.998,207.652,220,233.082,246.942,261.626,277.183,293.665,311.127,329.628,349.228,369.994,391.995,415.305,440,466.164,493.883,523.251,554.365,587.33,622.254,659.255,698.456,739.989,783.991,830.609,880,932.328,987.767,1046.502,1108.731,1174.659,1244.508,1318.51,1396.913,1479.978,1567.982,1661.219,1760,1864.655,1975.533,2093.005,2217.461,2349.318,2489.016,2637.02,2793.826,2959.955,3135.963,3322.438,3520,3729.31,3951.066,4186.009,4434.922,4698.636,4978.032,5274.041,5587.652,5919.911,6271.927,6644.875,7040,7458.62,7902.133,8372.018,8869.844,9397.273,9956.063,10548.08,11175.3,11839.82,12543.85};
+const float noteFreqs[128] = {8.176, 8.662, 9.177, 9.723, 10.301, 10.913, 11.562, 12.25, 12.978, 13.75, 14.568, 15.434, 16.352, 17.324, 18.354, 19.445, 20.602, 21.827, 23.125, 24.5, 25.957, 27.5, 29.135, 30.868, 32.703, 34.648, 36.708, 38.891, 41.203, 43.654, 46.249, 48.999, 51.913, 55, 58.27, 61.735, 65.406, 69.296, 73.416, 77.782, 82.407, 87.307, 92.499, 97.999, 103.826, 110, 116.541, 123.471, 130.813, 138.591, 146.832, 155.563, 164.814, 174.614, 184.997, 195.998, 207.652, 220, 233.082, 246.942, 261.626, 277.183, 293.665, 311.127, 329.628, 349.228, 369.994, 391.995, 415.305, 440, 466.164, 493.883, 523.251, 554.365, 587.33, 622.254, 659.255, 698.456, 739.989, 783.991, 830.609, 880, 932.328, 987.767, 1046.502, 1108.731, 1174.659, 1244.508, 1318.51, 1396.913, 1479.978, 1567.982, 1661.219, 1760, 1864.655, 1975.533, 2093.005, 2217.461, 2349.318, 2489.016, 2637.02, 2793.826, 2959.955, 3135.963, 3322.438, 3520, 3729.31, 3951.066, 4186.009, 4434.922, 4698.636, 4978.032, 5274.041, 5587.652, 5919.911, 6271.927, 6644.875, 7040, 7458.62, 7902.133, 8372.018, 8869.844, 9397.273, 9956.063, 10548.08, 11175.3, 11839.82, 12543.85};
 
 AudioEffectEnvelope envelope1;
 AudioEffectEnvelope envelope2;
@@ -108,9 +113,10 @@ AudioEffectEnsemble ensemble1;
 
 // array of envelopes
 AudioEffectEnvelope *myEnvelope[VOICES] = { &envelope1, &envelope2, &envelope3, &envelope4, &envelope5, &envelope6, \
-&envelope7, &envelope8, &envelope9, &envelope10, &envelope11, &envelope12, &envelope13, &envelope14, &envelope15, \
-&envelope16, &envelope17, &envelope18, &envelope19, &envelope20, &envelope21, &envelope22, &envelope23, &envelope24, \
-&envelope25, &envelope26, &envelope27, &envelope28, &envelope29, &envelope30, &envelope31, &envelope32 };
+                                            &envelope7, &envelope8, &envelope9, &envelope10, &envelope11, &envelope12, &envelope13, &envelope14, &envelope15, \
+                                            &envelope16, &envelope17, &envelope18, &envelope19, &envelope20, &envelope21, &envelope22, &envelope23, &envelope24, \
+                                            &envelope25, &envelope26, &envelope27, &envelope28, &envelope29, &envelope30, &envelope31, &envelope32
+                                          };
 
 AudioSynthWaveform waveform1;
 AudioSynthWaveform waveform2;
@@ -147,9 +153,10 @@ AudioSynthWaveform waveform32;
 
 // array of waveforms
 AudioSynthWaveform *myWaveform[VOICES] = { &waveform1, &waveform2, &waveform3, &waveform4, &waveform5, &waveform6, \
-&waveform7, &waveform8, &waveform9, &waveform10, &waveform11, &waveform12, &waveform13, &waveform14, &waveform15, \
-&waveform16, &waveform17, &waveform18, &waveform19, &waveform20, &waveform21, &waveform22, &waveform23, &waveform24, \
-&waveform25, &waveform26, &waveform27, &waveform28, &waveform29, &waveform30, &waveform31, &waveform32};
+                                           &waveform7, &waveform8, &waveform9, &waveform10, &waveform11, &waveform12, &waveform13, &waveform14, &waveform15, \
+                                           &waveform16, &waveform17, &waveform18, &waveform19, &waveform20, &waveform21, &waveform22, &waveform23, &waveform24, \
+                                           &waveform25, &waveform26, &waveform27, &waveform28, &waveform29, &waveform30, &waveform31, &waveform32
+                                         };
 
 AudioConnection          patchCord1(waveform1, envelope1);
 AudioConnection          patchCord2(waveform2, envelope2);
@@ -195,7 +202,8 @@ AudioMixer4              mixer_group_8;
 
 // array of waveforms
 AudioMixer4 *myMixerGroup[8] = { &mixer_group_1, &mixer_group_2, &mixer_group_3, &mixer_group_4, &mixer_group_5, \
-&mixer_group_6, &mixer_group_7, &mixer_group_8};
+                                 &mixer_group_6, &mixer_group_7, &mixer_group_8
+                               };
 
 AudioMixer4              mixer_combo_1;
 AudioMixer4              mixer_combo_2;
@@ -281,7 +289,11 @@ AudioConnection          patchCord89(amp2, 0, i2sOut0, 1);
 
 AudioControlWM8731       wm8731_1;       //xy=1428,56
 
+// array of waveform pointers
 const int16_t *customWaveforms[8] = { custWave1, custWave2, custWave3, custWave4, custWave5, custWave6, custWave7, custWave8 };
+
+// array of mixer_group (1st level mixer) voice totals
+int mgv[LEVEL_1_MIXERS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 // pitch bend
 float pitchBend = 0;
@@ -341,7 +353,7 @@ long biquadLfoUpdateTimer;
 int lfoIndex = 0;
 float phaserDryWet = 0.0;
 
-float outAmpGain = 2.5;
+float outAmpGain = 1.0;
 
 //---------------------------------------------------------------------------------------------//
 // setup
@@ -372,16 +384,26 @@ void setup() {
     notes[j].mySequence = 0;
   }
 
-  // set gain
+  // set gain for level one mixers
+  // we will dynamically adjust the gain
+  // based on the number of voices per mixer
+  // 4 voices - 0.25
+  // 3 voices - 0.375
+  // 2 voices - 0.5
+  // 1 voice - 1.0
+  //
+  // I'm basing this all on the evidence that fixing
+  // the level one input gain at 0.25 avoided clipping
+  // when lots of voices were in use
   for (int gc = 0; gc < 8; gc++)
   {
     for (int cc = 0; cc < 4; cc++)
     {
       myMixerGroup[gc]->gain(cc, 0.25);
-    }  
+    }
   }
 
-  
+  // set gain for level two mixers
   mixer_combo_1.gain(0, 0.25);
   mixer_combo_1.gain(1, 0.25);
   mixer_combo_1.gain(2, 0.25);
@@ -390,9 +412,9 @@ void setup() {
   mixer_combo_2.gain(1, 0.25);
   mixer_combo_2.gain(2, 0.25);
   mixer_combo_2.gain(3, 0.25);
-  
-  mixer_all_voices.gain(0, 0.5);
-  mixer_all_voices.gain(1, 0.5);
+  // set gain for level three mixer
+  mixer_all_voices.gain(0, 1.0);
+  mixer_all_voices.gain(1, 1.0);
   amp1.gain(outAmpGain);
   amp2.gain(outAmpGain);
 
@@ -431,28 +453,28 @@ void setup() {
     // the MIDI channel will default to 1
     EEPROM.write(EE_MIDI_CHANNEL, myChannel);
   }
-  
+
   // MIDI setup
-  MIDI.begin(myChannel);  
-  MIDI.setHandleNoteOn(doNoteOn); 
-  MIDI.setHandleControlChange(doCC); 
-  MIDI.setHandleNoteOff(doNoteOff); 
+  MIDI.begin(myChannel);
+  MIDI.setHandleNoteOn(doNoteOn);
+  MIDI.setHandleControlChange(doCC);
+  MIDI.setHandleNoteOff(doNoteOff);
   MIDI.setHandlePitchBend(doBend);
-  
+
   // Setup the controls. The return value is the handle to use when checking for control changes, etc.
   // pushbuttons
   buttonLHandle = controls.addSwitch(BA_EXPAND_SW1_PIN); // will be used for vox humana control
   buttonRHandle = controls.addSwitch(BA_EXPAND_SW2_PIN); // will be used for sub-octave
   // pots
   attackHandle = controls.addPot(BA_EXPAND_POT1_PIN, potCalibMin, potCalibMax, potSwapDirection); // control the amount of delay
-  releaseHandle = controls.addPot(BA_EXPAND_POT2_PIN, potCalibMin, potCalibMax, potSwapDirection); 
-  centerKnobHandle = controls.addPot(BA_EXPAND_POT3_PIN, potCalibMin, potCalibMax, potSwapDirection); 
+  releaseHandle = controls.addPot(BA_EXPAND_POT2_PIN, potCalibMin, potCalibMax, potSwapDirection);
+  centerKnobHandle = controls.addPot(BA_EXPAND_POT3_PIN, potCalibMin, potCalibMax, potSwapDirection);
   // leds
   ledLHandle = controls.addOutput(BA_EXPAND_LED1_PIN);
   controls.setOutput(ledLHandle, 0);
   ledRHandle = controls.addOutput(BA_EXPAND_LED2_PIN);
   controls.setOutput(ledRHandle, 0);
-  
+
   controls.setOutput(ledLHandle, 1);
   delay(200);
   controls.setOutput(ledLHandle, 0);
@@ -464,7 +486,7 @@ void setup() {
 
   biquadLfoUpdateTimer = micros();
   //Serial.println("end of setup");
-  
+
 }
 
 //---------------------------------------------------------------------------------------------//
@@ -477,10 +499,11 @@ void loop()
   for (int p = 0; p < VOICES; p++)
   {
     // first clean up completed notes
-    if (!(myEnvelope[p]->isActive()))
-      notes[p].mySequence = 0;  
+    if (!(myEnvelope[p]->isActive())) {
+      notes[p].mySequence = 0;
+    }
   }
-  
+
   // get MIDI notes if available
   MIDI.read();
 
@@ -515,7 +538,7 @@ void loop()
     }
     lPressed = 0;
   }
-  
+
   // check button 2 (right)
   if (controls.isSwitchToggled(buttonRHandle))
   {
@@ -538,7 +561,7 @@ void loop()
       myEnvelope[g]->attack(vcaAttack);
     }
   }
-  
+
   // release
   if (controls.checkPotValue(releaseHandle, potValue))
   {
@@ -549,7 +572,7 @@ void loop()
       myEnvelope[f]->release(vcaRelease);
     }
   }
-  
+
   // cutoff or phaser dry/wet
   if (controls.checkPotValue(centerKnobHandle, potValue))
   {
@@ -571,7 +594,7 @@ void loop()
     }
   }
 
-  
+
   // update the biquad filter frequency
   if ((micros() - biquadLfoUpdateTimer) >= LFO_PERIOD)
   {
@@ -586,8 +609,8 @@ void loop()
     biquad2.setNotch(2, ((sin((( 2.0 * M_PI) / BIQUAD_LFO_RANGE) * lfoIndex)) * 3000) + 5000, 0.9);
     biquadLfoUpdateTimer = micros();
   }
-  
-} 
+
+}
 
 //---------------------------------------------------------------------------------------------//
 // function doNoteOn
@@ -595,8 +618,8 @@ void loop()
 void doNoteOn(byte channel, byte pitch, byte velocity)
 {
   //Serial.println("got a note");
-  
-  // flag if a free voice was found 
+
+  // flag if a free voice was found
   unsigned int voicesFree = 0;
   // the voice to be used
   unsigned int voiceUsed = 0;
@@ -608,7 +631,7 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
 
   //Serial.println("doNoteOn");
 
-//  digitalWrite(LED_PIN, HIGH);
+  //  digitalWrite(LED_PIN, HIGH);
 
   // see if the note is already playing
   for (i = 0; i < VOICES; i++)
@@ -625,7 +648,7 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
     }
   }
 
-    // if not already playing
+  // if not already playing
   if (isSameNote == 0) {
     // try to find a free voice to play the note
     for (i = 0; i < VOICES; i++)
@@ -640,9 +663,13 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
         // flag it
         voicesFree = 1;
         // store the voice used so the right oscillators can be turned on
-        voiceUsed = i;  
+        voiceUsed = i;
+        // add 1 to the level 1 mixer count
+        mgv[i / 4] = mgv[i / 4] + 1;
+  
         //Serial.print("Using voice ");
         //Serial.println(voiceUsed);
+  
         break;
       }
       // increment the sequence number if the note is being used
@@ -671,7 +698,7 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
     // assign pitch and velocity to myPitch and myVelocity
     notes[voiceUsed].myPitch = pitch;
     notes[voiceUsed].myVelocity = velocity;
-        
+
     //Serial.print("Stealing voice ");
     //Serial.println(voiceUsed);
 
@@ -681,13 +708,13 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
     myEnvelope[voiceUsed]->noteOff();
 
     AudioInterrupts();
-  }  
+  }
   // voiceUsed is now the voice that will play the note
 
   // convert MIDI note to frequency
   oscFreq = noteFreqs[pitch];
 
-  // bend if necessary 
+  // bend if necessary
   oscFreq = noteFreqs[notes[voiceUsed].myPitch];
   // bend up
   if (pitchBend > 0)
@@ -700,6 +727,37 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
     oscFreq = oscFreq + ((oscFreq / 2) * pitchBend);
   }
 
+  // adjust mixer gains
+  // level 1
+  for (int gc = 0; gc < 8; gc++)
+  {
+    for (int cc = 0; cc < 4; cc++)
+    {
+      float my_gain = 0.0;
+      switch (mgv[gc]) {
+        case 0:
+          my_gain = 1.0;
+          break;
+        case 1:
+          my_gain = 1.0;
+          break;
+        case 2:
+          my_gain = 0.5;
+          break;
+        case 3:
+          my_gain = 0.375;
+          break;
+        case 4:
+          my_gain = 0.25;
+          break;
+        default:
+          my_gain = 0.25;
+          break;
+      }
+      myMixerGroup[gc]->gain(cc, my_gain);
+    }
+  }
+
   AudioNoInterrupts();
   myWaveform[voiceUsed]->begin(WAVEFORM_ARBITRARY);
   myWaveform[voiceUsed]->arbitraryWaveform(customWaveforms[oscWF], 172.0);
@@ -708,16 +766,16 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
   myEnvelope[voiceUsed]->noteOn();
   AudioInterrupts();
 
-  
-//  digitalWrite(LED_PIN, LOW);
-//
-//  Serial.println("CPU: ");
-//  Serial.print(AudioProcessorUsage());
-//  Serial.print("    ");
-//  Serial.print("Memory: ");
-//  Serial.print(AudioMemoryUsage());
-//  Serial.println(" ");
-  
+
+  //  digitalWrite(LED_PIN, LOW);
+  //
+  //  Serial.println("CPU: ");
+  //  Serial.print(AudioProcessorUsage());
+  //  Serial.print("    ");
+  //  Serial.print("Memory: ");
+  //  Serial.print(AudioMemoryUsage());
+  //  Serial.println(" ");
+
 }
 
 //---------------------------------------------------------------------------------------------//
@@ -732,16 +790,21 @@ void doNoteOff(byte channel, byte pitch, byte velocity)
   // find the voice which is playing the note
   for (int i = 0; i < VOICES; i++)
   {
-     if (pitch == notes[i].myPitch)
-     {
-       voiceUsed = i;
-       // reset the voice values
-       notes[i].myPitch = 0;
-       notes[i].myVelocity = 0;
-       notes[i].mySequence = 0;
-      }
+    if (pitch == notes[i].myPitch)
+    {
+      voiceUsed = i;
+      // reset the voice values
+      notes[i].myPitch = 0;
+      notes[i].myVelocity = 0;
+      notes[i].mySequence = 0;
+      // subtract 1 from the voice count on the level 1 mixer used
+      // frankly this isn't ideal since note off starts release
+      // and the note is probably still playing
+      if (mgv[i / 4] > 0)
+        mgv[i / 4] = mgv[i / 4] - 1;
+    }
   }
-  
+
   //Serial.print("Releasing voice ");
   //Serial.println(voiceUsed);
 
@@ -805,7 +868,7 @@ int setMIDIChannel(int ledState)
 {
   int clickCount = 0;
   unsigned long previousMillis;
-    
+
   // light the led for 1.0 sec to indicate set mode
   if (ledState)
   {
@@ -815,7 +878,7 @@ int setMIDIChannel(int ledState)
   controls.setOutput(ledLHandle, 1);
   delay(1000);
   controls.setOutput(ledLHandle, 0);
-  
+
   // loop until the channel button is held down
   while (1)
   {
@@ -835,14 +898,14 @@ int setMIDIChannel(int ledState)
         Serial.println((millis() - previousMillis));
         break;
       }
-    }    
+    }
   }
-      
+
   // light the led for 1.0 sec to indicate set mode done
   controls.setOutput(ledLHandle, 1);
   delay(1000);
   controls.setOutput(ledLHandle, 0);
-  
+
   // blink back the channel
   for (int r = 0; r <= clickCount; r++)
   {
@@ -851,13 +914,13 @@ int setMIDIChannel(int ledState)
     controls.setOutput(ledLHandle, 0);
     delay(500);
   }
- 
+
   // store the setting to EEPROM if not zero or greater than 15
   if ((clickCount > 0) && (clickCount < 16))
   {
     EEPROM.write(EE_MIDI_CHANNEL, clickCount);
     myChannel = clickCount;
   }
- 
+
   return ledState;
 }
