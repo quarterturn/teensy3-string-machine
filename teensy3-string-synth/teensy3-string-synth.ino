@@ -21,6 +21,10 @@ BAAudioControlWM8731      codecControl;
 AudioOutputI2S           i2sOut0;
 
 #include <MIDI.h>
+// if you get keyword MIDI error uncomment the two lines below
+//MIDI_CREATE_DEFAULT_INSTANCE();
+//using namespace midi;
+
 #include <EEPROM.h>
 #include "custWaveforms.h"
 #include <math.h>
