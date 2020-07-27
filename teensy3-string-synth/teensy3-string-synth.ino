@@ -621,11 +621,12 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
     if (pitch == notes[i].myPitch) {
       isSameNote = 1;
       voiceUsed = i;
+      voicesFree = 1;
       break;
     }
   }
 
-    // if not already playing
+  // if not already playing
   if (isSameNote == 0) {
     // try to find a free voice to play the note
     for (i = 0; i < VOICES; i++)
