@@ -75,6 +75,66 @@ note notes[VOICES];
 // array of frequencies corresponding to MIDI notes 0 to 128
 const float noteFreqs[128] = {8.176,8.662,9.177,9.723,10.301,10.913,11.562,12.25,12.978,13.75,14.568,15.434,16.352,17.324,18.354,19.445,20.602,21.827,23.125,24.5,25.957,27.5,29.135,30.868,32.703,34.648,36.708,38.891,41.203,43.654,46.249,48.999,51.913,55,58.27,61.735,65.406,69.296,73.416,77.782,82.407,87.307,92.499,97.999,103.826,110,116.541,123.471,130.813,138.591,146.832,155.563,164.814,174.614,184.997,195.998,207.652,220,233.082,246.942,261.626,277.183,293.665,311.127,329.628,349.228,369.994,391.995,415.305,440,466.164,493.883,523.251,554.365,587.33,622.254,659.255,698.456,739.989,783.991,830.609,880,932.328,987.767,1046.502,1108.731,1174.659,1244.508,1318.51,1396.913,1479.978,1567.982,1661.219,1760,1864.655,1975.533,2093.005,2217.461,2349.318,2489.016,2637.02,2793.826,2959.955,3135.963,3322.438,3520,3729.31,3951.066,4186.009,4434.922,4698.636,4978.032,5274.041,5587.652,5919.911,6271.927,6644.875,7040,7458.62,7902.133,8372.018,8869.844,9397.273,9956.063,10548.08,11175.3,11839.82,12543.85};
 
+AudioSynthWaveform waveform1;
+AudioSynthWaveform waveform2;
+AudioSynthWaveform waveform3;
+AudioSynthWaveform waveform4;
+AudioSynthWaveform waveform5;
+AudioSynthWaveform waveform6;
+AudioSynthWaveform waveform7;
+AudioSynthWaveform waveform8;
+AudioSynthWaveform waveform9;
+AudioSynthWaveform waveform10;
+AudioSynthWaveform waveform11;
+AudioSynthWaveform waveform12;
+AudioSynthWaveform waveform13;
+AudioSynthWaveform waveform14;
+AudioSynthWaveform waveform15;
+AudioSynthWaveform waveform16;
+AudioSynthWaveform waveform17;
+AudioSynthWaveform waveform18;
+AudioSynthWaveform waveform19;
+AudioSynthWaveform waveform20;
+AudioSynthWaveform waveform21;
+AudioSynthWaveform waveform22;
+AudioSynthWaveform waveform23;
+AudioSynthWaveform waveform24;
+AudioSynthWaveform waveform25;
+AudioSynthWaveform waveform26;
+AudioSynthWaveform waveform27;
+AudioSynthWaveform waveform28;
+AudioSynthWaveform waveform29;
+AudioSynthWaveform waveform30;
+AudioSynthWaveform waveform31;
+AudioSynthWaveform waveform32;
+
+// array of waveforms
+AudioSynthWaveform *myWaveform[VOICES] = { &waveform1, &waveform2, &waveform3, &waveform4, &waveform5, &waveform6, \
+&waveform7, &waveform8, &waveform9, &waveform10, &waveform11, &waveform12, &waveform13, &waveform14, &waveform15, \
+&waveform16, &waveform17, &waveform18, &waveform19, &waveform20, &waveform21, &waveform22, &waveform23, &waveform24, \
+&waveform25, &waveform26, &waveform27, &waveform28, &waveform29, &waveform30, &waveform31, &waveform32};
+
+AudioMixer4              mixer_group_1;
+AudioMixer4              mixer_group_2;
+AudioMixer4              mixer_group_3;
+AudioMixer4              mixer_group_4;
+AudioMixer4              mixer_group_5;
+AudioMixer4              mixer_group_6;
+AudioMixer4              mixer_group_7;
+AudioMixer4              mixer_group_8;
+
+// array of waveforms
+AudioMixer4 *myMixerGroup[8] = { &mixer_group_1, &mixer_group_2, &mixer_group_3, &mixer_group_4, &mixer_group_5, \
+&mixer_group_6, &mixer_group_7, &mixer_group_8};
+
+AudioMixer4              mixer_combo_1;
+AudioMixer4              mixer_combo_2;
+
+AudioMixer4              mixer_all_voices;
+
+AudioMixer4              mixer_phaser_1;
+AudioMixer4              mixer_phaser_2;
+
 AudioEffectEnvelope envelope1;
 AudioEffectEnvelope envelope2;
 AudioEffectEnvelope envelope3;
@@ -116,44 +176,13 @@ AudioEffectEnvelope *myEnvelope[VOICES] = { &envelope1, &envelope2, &envelope3, 
 &envelope16, &envelope17, &envelope18, &envelope19, &envelope20, &envelope21, &envelope22, &envelope23, &envelope24, \
 &envelope25, &envelope26, &envelope27, &envelope28, &envelope29, &envelope30, &envelope31, &envelope32 };
 
-AudioSynthWaveform waveform1;
-AudioSynthWaveform waveform2;
-AudioSynthWaveform waveform3;
-AudioSynthWaveform waveform4;
-AudioSynthWaveform waveform5;
-AudioSynthWaveform waveform6;
-AudioSynthWaveform waveform7;
-AudioSynthWaveform waveform8;
-AudioSynthWaveform waveform9;
-AudioSynthWaveform waveform10;
-AudioSynthWaveform waveform11;
-AudioSynthWaveform waveform12;
-AudioSynthWaveform waveform13;
-AudioSynthWaveform waveform14;
-AudioSynthWaveform waveform15;
-AudioSynthWaveform waveform16;
-AudioSynthWaveform waveform17;
-AudioSynthWaveform waveform18;
-AudioSynthWaveform waveform19;
-AudioSynthWaveform waveform20;
-AudioSynthWaveform waveform21;
-AudioSynthWaveform waveform22;
-AudioSynthWaveform waveform23;
-AudioSynthWaveform waveform24;
-AudioSynthWaveform waveform25;
-AudioSynthWaveform waveform26;
-AudioSynthWaveform waveform27;
-AudioSynthWaveform waveform28;
-AudioSynthWaveform waveform29;
-AudioSynthWaveform waveform30;
-AudioSynthWaveform waveform31;
-AudioSynthWaveform waveform32;
+AudioFilterStateVariable filter1;
+AudioAmplifier           amp1;
+AudioAmplifier           amp2;
 
-// array of waveforms
-AudioSynthWaveform *myWaveform[VOICES] = { &waveform1, &waveform2, &waveform3, &waveform4, &waveform5, &waveform6, \
-&waveform7, &waveform8, &waveform9, &waveform10, &waveform11, &waveform12, &waveform13, &waveform14, &waveform15, \
-&waveform16, &waveform17, &waveform18, &waveform19, &waveform20, &waveform21, &waveform22, &waveform23, &waveform24, \
-&waveform25, &waveform26, &waveform27, &waveform28, &waveform29, &waveform30, &waveform31, &waveform32};
+// for phaser effect
+AudioFilterBiquad        biquad1;
+AudioFilterBiquad        biquad2;
 
 AudioConnection          patchCord1(waveform1, envelope1);
 AudioConnection          patchCord2(waveform2, envelope2);
@@ -188,34 +217,6 @@ AudioConnection          patchCord30(waveform30, envelope30);
 AudioConnection          patchCord31(waveform31, envelope31);
 AudioConnection          patchCord32(waveform32, envelope32);
 
-AudioMixer4              mixer_group_1;
-AudioMixer4              mixer_group_2;
-AudioMixer4              mixer_group_3;
-AudioMixer4              mixer_group_4;
-AudioMixer4              mixer_group_5;
-AudioMixer4              mixer_group_6;
-AudioMixer4              mixer_group_7;
-AudioMixer4              mixer_group_8;
-
-// array of waveforms
-AudioMixer4 *myMixerGroup[8] = { &mixer_group_1, &mixer_group_2, &mixer_group_3, &mixer_group_4, &mixer_group_5, \
-&mixer_group_6, &mixer_group_7, &mixer_group_8};
-
-AudioMixer4              mixer_combo_1;
-AudioMixer4              mixer_combo_2;
-
-AudioMixer4              mixer_all_voices;
-
-AudioMixer4              mixer_phaser_1;
-AudioMixer4              mixer_phaser_2;
-
-AudioFilterStateVariable filter1;
-AudioAmplifier           amp1;
-AudioAmplifier           amp2;
-
-// for phaser effect
-AudioFilterBiquad        biquad1;
-AudioFilterBiquad        biquad2;
 
 AudioConnection          patchCord34(envelope1, 0, mixer_group_1, 0);
 AudioConnection          patchCord35(envelope2, 0, mixer_group_1, 1);
@@ -680,12 +681,12 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
     //Serial.print("Stealing voice ");
     //Serial.println(voiceUsed);
 
-    AudioNoInterrupts();
-
-    // turn off the voice being stolen
-    myEnvelope[voiceUsed]->noteOff();
-
-    AudioInterrupts();
+//    AudioNoInterrupts();
+//
+//    // turn off the voice being stolen
+//    myEnvelope[voiceUsed]->noteOff();
+//
+//    AudioInterrupts();
   }  
   // voiceUsed is now the voice that will play the note
 
@@ -706,6 +707,7 @@ void doNoteOn(byte channel, byte pitch, byte velocity)
   }
 
   AudioNoInterrupts();
+  myEnvelope[voiceUsed]->noteOff();
   myWaveform[voiceUsed]->begin(WAVEFORM_ARBITRARY);
   myWaveform[voiceUsed]->arbitraryWaveform(customWaveforms[oscWF], 172.0);
   myWaveform[voiceUsed]->frequency(oscFreq);
